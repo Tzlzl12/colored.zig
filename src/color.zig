@@ -32,48 +32,48 @@ pub const Color = union(enum) {
         return std.mem.eql(u8, color_term, "truecolor") or std.mem.eql(u8, color_term, "24bit");
     }
 
-    pub fn to_fg_str(self: Color, alloc: std.mem.Allocator) ![]const u8 {
-        return switch (self) {
-            .Black => "30",
-            .Red => "31",
-            .Green => "32",
-            .Yellow => "33",
-            .Blue => "34",
-            .Magenta => "35",
-            .Cyan => "36",
-            .White => "37",
-            .BrightBlack => "90",
-            .BrightRed => "91",
-            .BrightGreen => "92",
-            .BrightYellow => "93",
-            .BrightBlue => "94",
-            .BrightMagenta => "95",
-            .BrightCyan => "96",
-            .BrightWhite => "97",
-            .AnsiColor => |n| try std.fmt.allocPrint(alloc, "38;5;{}", .{n}),
-            .TrueColor => |color| try std.fmt.allocPrint(alloc, "38;2;{};{};{}", .{ color[0], color[1], color[2] }),
-        };
+    pub fn to_fg_str(self: Color, writer: anytype) !void {
+        switch (self) {
+            .Black => try writer.writeAll("30"),
+            .Red => try writer.writeAll("31"),
+            .Green => try writer.writeAll("32"),
+            .Yellow => try writer.writeAll("33"),
+            .Blue => try writer.writeAll("34"),
+            .Magenta => try writer.writeAll("35"),
+            .Cyan => try writer.writeAll("36"),
+            .White => try writer.writeAll("37"),
+            .BrightBlack => try writer.writeAll("90"),
+            .BrightRed => try writer.writeAll("91"),
+            .BrightGreen => try writer.writeAll("92"),
+            .BrightYellow => try writer.writeAll("93"),
+            .BrightBlue => try writer.writeAll("94"),
+            .BrightMagenta => try writer.writeAll("95"),
+            .BrightCyan => try writer.writeAll("96"),
+            .BrightWhite => try writer.writeAll("97"),
+            .AnsiColor => |n| try writer.print("38;5;{d}", .{n}),
+            .TrueColor => |color| try writer.print("38;2;{d};{d};{d}", .{ color[0], color[1], color[2] }),
+        }
     }
-    pub fn to_bg_str(self: Color, alloc: std.mem.Allocator) ![]const u8 {
+    pub fn to_bg_str(self: Color, writer: anytype) !void {
         return switch (self) {
-            .Black => "40",
-            .Red => "41",
-            .Green => "42",
-            .Yellow => "43",
-            .Blue => "44",
-            .Magenta => "45",
-            .Cyan => "46",
-            .White => "47",
-            .BrightBlack => "100",
-            .BrightRed => "101",
-            .BrightGreen => "102",
-            .BrightYellow => "103",
-            .BrightBlue => "104",
-            .BrightMagenta => "105",
-            .BrightCyan => "106",
-            .BrightWhite => "107",
-            .AnsiColor => |n| try std.fmt.allocPrint(alloc, "48;5;{}", .{n}),
-            .TrueColor => |color| try std.fmt.allocPrint(alloc, "48;2;{};{};{}", .{ color[0], color[1], color[2] }),
+            .Black => try writer.writeAll("40"),
+            .Red => try writer.writeAll("41"),
+            .Green => try writer.writeAll("42"),
+            .Yellow => try writer.writeAll("43"),
+            .Blue => try writer.writeAll("44"),
+            .Magenta => try writer.writeAll("45"),
+            .Cyan => try writer.writeAll("46"),
+            .White => try writer.writeAll("47"),
+            .BrightBlack => try writer.writeAll("100"),
+            .BrightRed => try writer.writeAll("101"),
+            .BrightGreen => try writer.writeAll("102"),
+            .BrightYellow => try writer.writeAll("103"),
+            .BrightBlue => try writer.writeAll("104"),
+            .BrightMagenta => try writer.writeAll("105"),
+            .BrightCyan => try writer.writeAll("106"),
+            .BrightWhite => try writer.writeAll("107"),
+            .AnsiColor => |n| try writer.print("48;5;{d}", .{n}),
+            .TrueColor => |color| try writer.print("48;2;{d};{d};{d}", .{ color[0], color[1], color[2] }),
         };
     }
     fn into_truecolor(self: Color) Color {
@@ -153,54 +153,60 @@ test "env variables" {
     std.debug.print("{}\n", .{str.len});
 }
 
-test "to_fg_str" {
-    const alloc = testing.allocator;
-
+test "to_fg_str - basic colors" {
     const cases = [_]struct { color: Color, expected: []const u8 }{
         .{ .color = .Black, .expected = "30" },
         .{ .color = .BrightMagenta, .expected = "95" },
         .{ .color = .White, .expected = "37" },
     };
 
-    for (cases) |c| {
-        const str = try c.color.to_fg_str(alloc);
-        defer if (str.len > 2) alloc.free(str);
+    for (cases) |case| {
+        var list = std.ArrayList(u8).empty;
+        defer list.deinit(testing.allocator);
 
-        try testing.expectEqualStrings(c.expected, str);
+        // 必须传 writer，不能传 alloc
+        try case.color.to_fg_str(list.writer(testing.allocator));
+        try testing.expectEqualStrings(case.expected, list.items);
     }
 }
-test "to_fg_str - 256 colors" {
-    const alloc = testing.allocator;
-    const c = Color{ .AnsiColor = 45 };
-    const str = try c.to_fg_str(alloc);
-    defer if (str.len > 3) alloc.free(str);
 
-    try testing.expectEqualStrings("38;5;45", str);
+test "to_fg_str - 256 colors" {
+    const c = Color{ .AnsiColor = 45 };
+    var list = std.ArrayList(u8).empty;
+    defer list.deinit(testing.allocator);
+
+    const w = list.writer(testing.allocator);
+    try c.to_fg_str(w);
+
+    try testing.expectEqualStrings("38;5;45", list.items);
 }
 
 test "to_fg_str - TrueColor" {
-    const alloc = testing.allocator;
     const c = Color{ .TrueColor = .{ 123, 45, 67 } };
-    const str = try c.to_fg_str(alloc);
-    defer if (str.len > 3) alloc.free(str);
+    var list = std.ArrayList(u8).empty;
+    defer list.deinit(testing.allocator);
 
-    try testing.expectEqualStrings("38;2;123;45;67", str);
+    const w = list.writer(testing.allocator);
+    try c.to_fg_str(w);
+
+    try testing.expectEqualStrings("38;2;123;45;67", list.items);
 }
-test "to_bg_str - bright background + 256 color" {
-    const alloc = testing.allocator;
 
+test "to_bg_str - bright background + 256 color" {
     {
         const c = Color{ .BrightYellow = {} };
-        const str = try c.to_bg_str(alloc);
-        defer if (str.len > 3) alloc.free(str);
-        try testing.expectEqualStrings("103", str);
+        var list = std.ArrayList(u8).empty;
+        defer list.deinit(testing.allocator);
+        try c.to_bg_str(list.writer(testing.allocator));
+        try testing.expectEqualStrings("103", list.items);
     }
 
     {
         const c = Color{ .AnsiColor = 199 };
-        const str = try c.to_bg_str(alloc);
-        defer if (str.len > 3) alloc.free(str);
-        try testing.expectEqualStrings("48;5;199", str);
+        var list = std.ArrayList(u8).empty;
+        defer list.deinit(testing.allocator);
+        try c.to_bg_str(list.writer(testing.allocator));
+        try testing.expectEqualStrings("48;5;199", list.items);
     }
 }
 
@@ -208,7 +214,6 @@ test "from_str - basic colors" {
     const cases = [_]struct { input: []const u8, expected: Color }{
         .{ .input = "red", .expected = .Red },
         .{ .input = "blue", .expected = .Blue },
-        // .{ .input = "bright cyan", .expected = .BrightCyan },
         .{ .input = "yellow", .expected = .Yellow },
     };
 
@@ -217,10 +222,8 @@ test "from_str - basic colors" {
         try testing.expectEqual(c.expected, result);
     }
 }
-test "from_str - hex color #rrggbb" {
-    const alloc = testing.allocator; // 这里不需要，但保持一致
-    _ = alloc;
 
+test "from_str - hex color #rrggbb" {
     const cases = [_]struct { input: []const u8, expected: Color }{
         .{ .input = "#FF0000", .expected = .{ .TrueColor = .{ 255, 0, 0 } } },
         .{ .input = "#00ff00", .expected = .{ .TrueColor = .{ 0, 255, 0 } } },
@@ -229,7 +232,6 @@ test "from_str - hex color #rrggbb" {
 
     for (cases) |c| {
         const result = try Color.from_str(c.input);
-        // try testing.expectEqual(.TrueColor, @as(@Tag(Color), result));
         try testing.expectEqual(c.expected, result);
     }
 }
