@@ -2,8 +2,6 @@ const std = @import("std");
 
 const ColorError = error{
     InvalidColor,
-    InvalidCharacter,
-    Overflow,
 };
 
 pub const Color = union(enum) {
@@ -98,7 +96,7 @@ pub const Color = union(enum) {
             else => self,
         };
     }
-    pub fn from_str(str: []const u8) ColorError!Color {
+    pub fn from_str(str: []const u8) !Color {
         if (std.mem.eql(u8, str, "black")) return .Black;
         if (std.mem.eql(u8, str, "red")) return .Red;
         if (std.mem.eql(u8, str, "green")) return .Green;
@@ -122,7 +120,7 @@ pub const Color = union(enum) {
 
         return error.InvalidColor;
     }
-    fn parse_hex(str: []const u8) ColorError!Color {
+    fn parse_hex(str: []const u8) !Color {
         if (str.len == 6) {
             return .{ .TrueColor = .{
                 try std.fmt.parseInt(u8, str[0..2], 16),
