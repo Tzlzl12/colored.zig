@@ -27,7 +27,7 @@ pub const Color = union(enum) {
     TrueColor: struct { u8, u8, u8 },
 
     /// TODO: windows is not support
-    fn truecolor_support() bool {
+    pub fn truecolor_support() bool {
         const val = std.posix.getenv("COLORTERM") orelse return false;
         return std.mem.eql(u8, val, "truecolor") or std.mem.eql(u8, val, "24bit");
     }
@@ -76,25 +76,25 @@ pub const Color = union(enum) {
             .TrueColor => |color| try writer.print("48;2;{d};{d};{d}", .{ color[0], color[1], color[2] }),
         };
     }
-    fn into_truecolor(self: Color) Color {
+    pub fn into_truecolor(self: Color) Color {
         return switch (self) {
-            .Black => .{.TrueColor{ 0, 0, 0 }},
-            .Red => .{.TrueColor{ 205, 0, 0 }},
-            .Green => .{.TrueColor{ 0, 205, 0 }},
-            .Yellow => .{.TrueColor{ 205, 205, 0 }},
-            .Blue => .{.TrueColor{ 0, 0, 238 }},
-            .Magenta => .{.TrueColor{ 205, 0, 205 }},
-            .Cyan => .{.TrueColor{ 0, 205, 205 }},
-            .White => .{.TrueColor{ 229, 229, 229 }},
+            .Black => Color{ .TrueColor = .{ 17, 19, 23 } }, // #111317
+            .Red => Color{ .TrueColor = .{ 255, 131, 139 } }, // #ff838b
+            .Green => Color{ .TrueColor = .{ 135, 192, 95 } }, // #87c05f
+            .Yellow => Color{ .TrueColor = .{ 223, 171, 37 } }, // #dfab25
+            .Blue => Color{ .TrueColor = .{ 94, 183, 255 } }, // #5eb7ff
+            .Magenta => Color{ .TrueColor = .{ 221, 151, 241 } }, // #dd97f1
+            .Cyan => Color{ .TrueColor = .{ 74, 194, 184 } }, // #4ec2b8
+            .White => Color{ .TrueColor = .{ 155, 159, 169 } }, // #9b9fa9
 
-            .BrightBlack => .{.TrueColor{ 127, 127, 127 }},
-            .BrightRed => .{.TrueColor{ 255, 0, 0 }},
-            .BrightGreen => .{.TrueColor{ 0, 255, 0 }},
-            .BrightYellow => .{.TrueColor{ 255, 255, 0 }},
-            .BrightBlue => .{.TrueColor{ 92, 92, 255 }},
-            .BrightMagenta => .{.TrueColor{ 255, 0, 255 }},
-            .BrightCyan => .{.TrueColor{ 0, 255, 255 }},
-            .BrightWhite => .{.TrueColor{ 255, 255, 255 }},
+            .BrightBlack => Color{ .TrueColor = .{ 42, 47, 56 } }, // #2a2f38
+            .BrightRed => Color{ .TrueColor = .{ 255, 220, 223 } }, // #ffe4df
+            .BrightGreen => Color{ .TrueColor = .{ 226, 241, 215 } }, // #e2f1d7
+            .BrightYellow => Color{ .TrueColor = .{ 244, 228, 187 } }, // #f4e4bb
+            .BrightBlue => Color{ .TrueColor = .{ 200, 230, 255 } }, // #c8e6ff
+            .BrightMagenta => Color{ .TrueColor = .{ 243, 222, 249 } }, // #f3def9
+            .BrightCyan => Color{ .TrueColor = .{ 188, 235, 231 } }, // #bbede7
+            .BrightWhite => Color{ .TrueColor = .{ 236, 237, 241 } }, // #ecedf1
             else => self,
         };
     }
@@ -145,8 +145,7 @@ pub const Color = union(enum) {
 
 const testing = std.testing;
 test "env variables" {
-    const alloc = testing.allocator;
-    const val = try Color.truecolor_support(alloc);
+    const val = Color.truecolor_support();
     try std.testing.expect(val);
 
     const str = "#112200";
