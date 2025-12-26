@@ -1,6 +1,6 @@
 # Colored.zig
 
-Colored.zig is a library for colored text in the terminal.
+Colored.zig is a library for colored text in the terminal.   
 Copy from [colored-rs](https://github.com/colored-rs/colored) with the only same api
 ![](./asset/Snipaste_2025-12-26_17-31-46.png)
 # How to use 
@@ -29,12 +29,12 @@ std.log.info("{f}", .{color});
 * cyan      brightcyan
 * white     brightwhite
 
-set fg color color_name()
-set bg color on_color_name()
+set fg color color_name()   
+set bg color on_color_name()    
 
 also support true color
 `add_fgcolor()` and `add_bgcolor()`
-* you can input Color{.TrueColor = .{0x1f, 0x2f, 0x3f}} 
+* you can input `Color{.TrueColor = .{0x1f, 0x2f, 0x3f}}` 
 * also, you can input `add_fgcolor(.Black)`, if your term support true color, it will automatically change to true color
 
 ## Styles
