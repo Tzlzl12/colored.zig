@@ -16,10 +16,10 @@ pub const Style = struct {
     const STYLES: [8]Tuple = .{
         .{ BOLD, Styles.Bold },
         .{ DIMMED, Styles.Dimmed },
-        .{ UNDERLINE, Styles.Underline },
-        .{ REVERSED, Styles.Reversed },
         .{ ITALIC, Styles.Italic },
+        .{ UNDERLINE, Styles.Underline },
         .{ BLINK, Styles.Blink },
+        .{ REVERSED, Styles.Reversed },
         .{ HIDDEN, Styles.Hidden },
         .{ STRIKETHROUGH, Styles.Strikethrough },
     };
@@ -60,10 +60,10 @@ pub const Styles = enum {
     Clear,
     Bold,
     Dimmed,
-    Underline,
-    Reversed,
     Italic,
+    Underline,
     Blink,
+    Reversed,
     Hidden,
     Strikethrough,
 
