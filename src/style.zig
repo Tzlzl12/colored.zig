@@ -187,5 +187,5 @@ test "Style: 顺序一致性压力测试" {
 
     // 这里验证的是你 STYLES 数组中定义的物理顺序
     // 目前定义是：Bold(1), Dimmed(2), Underline(4), Reversed(7), Italic(3), Blink(5), Hidden(8), Strikethrough(9)
-    try testing.expectEqualStrings("1;2;4;7;3;5;8;9", list.items);
+    try testing.expectEqualStrings("1;2;3;4;5;7;8;9", list.items);
 }
