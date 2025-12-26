@@ -26,10 +26,10 @@ pub const Color = union(enum) {
     AnsiColor: u8,
     TrueColor: struct { u8, u8, u8 },
 
-    fn truecolor_support(alloc: std.mem.Allocator) !bool {
-        const color_term = try std.process.getEnvVarOwned(alloc, "COLORTERM");
-        defer alloc.free(color_term);
-        return std.mem.eql(u8, color_term, "truecolor") or std.mem.eql(u8, color_term, "24bit");
+    /// TODO: windows is not support
+    fn truecolor_support() bool {
+        const val = std.posix.getenv("COLORTERM") orelse return false;
+        return std.mem.eql(u8, val, "truecolor") or std.mem.eql(u8, val, "24bit");
     }
 
     pub fn to_fg_str(self: Color, writer: anytype) !void {
