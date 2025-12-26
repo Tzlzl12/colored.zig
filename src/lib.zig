@@ -33,14 +33,14 @@ pub const ColoredString = struct {
         return self;
     }
 
-    pub fn is_plain(self: ColoredString) bool {
+    fn is_plain(self: ColoredString) bool {
         return (self.fg_color == null) and (self.bg_color == null) and (self.style.val == Style.default().val);
     }
     fn compute_style(self: ColoredString, writer: anytype) !void {
         if (self.is_plain()) {
             return;
         }
-        try writer.writeAll("\x1B[");
+        try writer.writeAll("\x1b[");
 
         var has_written = false;
         if (self.style.val != Style.default().val) {
@@ -72,20 +72,23 @@ pub const ColoredString = struct {
             .input = input,
         };
     }
-    pub fn set_fgcolor(self: *ColoredString, color: Color) *ColoredString {
-        self.*.fg_color = color;
+    pub fn add_fgcolor(self: *ColoredString, color: Color) *ColoredString {
+        self.fg_color = if (Color.truecolor_support())
+            color.into_truecolor()
+        else
+            color;
         return self;
     }
 
-    pub fn set_bgcolor(self: *ColoredString, color: Color) *ColoredString {
-        self.*.bg_color = color;
+    pub fn add_bgcolor(self: *ColoredString, color: Color) *ColoredString {
+        self.*.bg_color = if (Color.truecolor_support())
+            color.into_truecolor()
+        else
+            color;
         return self;
     }
     pub fn clear(self: *ColoredString) *ColoredString {
-        self.clear_fg();
-        self.clear_bg();
-        self.clear_style();
-        return self;
+        return self.clear_fg().clear_bg().clear_style();
     }
     pub fn black(self: *ColoredString) *ColoredString {
         self.*.fg_color = .Black;
@@ -295,4 +298,11 @@ test "ColoredString: 完整流程测试" {
 
     // 预期结果：\x1b[1;31masd\x1b[0m
     try std.testing.expectEqualStrings("\x1b[1;31masd\x1b[0m", list.items);
+}
+
+test "truecolor" {
+    var c = ColoredString.from_str("asdfg");
+    _ = c.add_fgcolor(.Red).add_bgcolor(.Blue);
+
+    std.debug.print("{}", .{c});
 }
