@@ -1,7 +1,7 @@
 # Colored.zig
 
 Colored.zig is a library for colored text in the terminal.   
-Copy from [colored-rs](https://github.com/colored-rs/colored) with the only same api
+Copy from [colored-rs](https://github.com/colored-rs/colored) with the only same api    
 ![](./asset/Snipaste_2025-12-26_17-31-46.png)
 # How to use 
 ``` zig
